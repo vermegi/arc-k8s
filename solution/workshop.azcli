@@ -1,0 +1,42 @@
+az login 
+
+## Create a resource group
+az group create --name k8s-arc-demo --location eastus
+
+## Create a VNet and make a note of SUBNETID
+az network vnet create --name k8snet --resource-group k8s-arc-demo --location  eastus --address-prefixes 172.10.0.0/16 --subnet-name k8s-subnet1 --subnet-prefixes 172.10.1.0/24
+
+## Create a VM and make a note the fqdns and the public IP address
+## Update the placeholders for ALIAS and SUBNETID
+az vm create --name kube-master --resource-group k8s-arc-demo --location eastus --image UbuntuLTS --admin-user azureuser --generate-ssh-keys --size Standard_DS3_v2 --data-disk-sizes-gb 10 --public-ip-address-dns-name k8s-kube-master-lab-givermei --subnet "/subscriptions/49e23c68-dee0-4c5b-8c21-74acea0a2662/resourceGroups/k8s-arc-demo/providers/Microsoft.Network/virtualNetworks/k8snet/subnets/k8s-subnet1"
+
+## Login to the VM. Use the fqdns or the Public IP address
+ssh azureuser@k8s-kube-master-lab-givermei.eastus.cloudapp.azure.com
+
+## Create a file on the VM
+vi prepare-cluster-node.sh
+
+## Press INSERT key to get into the insert mode
+
+
+## Run the script to prepare the node for k8s installation
+sudo bash ./prepare-cluster-node.sh
+
+## Initiate the kubernetes cluster. Update the placeholders for fqdns and public IP
+## Make a note of the Kube Join command from the output if we wish to add nodes later
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-cert-extra-sans k8s-kube-master-lab-givermei.eastus.cloudapp.azure.com,40.87.12.97
+
+## Copy the kubeconfig file to .kube folder for kubectl access on the VM
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+## Install the network plugin
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+## remove the master taint as we are currently using a single node cluster
+kubectl taint nodes --all node-role.kubernetes.io/master-
+
+cat $HOME/.kube/config
+
+## Copy the contents from the cat above to be used next (using mouse right click)

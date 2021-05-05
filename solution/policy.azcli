@@ -1,0 +1,6 @@
+# Log in first with az login if you're not using Cloud Shell
+
+# Provider register: Register the Azure Policy provider
+az provider register --namespace 'Microsoft.PolicyInsights'
+
+

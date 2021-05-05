@@ -1,0 +1,4 @@
+az extension add --name k8s-configuration
+
+az k8s-configuration create --name cluster-config --cluster-name arc-k8s --resource-group arc-demo --operator-instance-name cluster-config --operator-namespace cluster-config --repository-url https://github.com/vermegi/arc-k8s-demo --scope cluster --cluster-type connectedClusters
+
